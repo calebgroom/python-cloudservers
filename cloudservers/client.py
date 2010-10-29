@@ -98,6 +98,6 @@ class CloudServersClient(httplib2.Http):
         """
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)
         query = urlparse.parse_qsl(query)
-        query.append(('fresh', str(time.time())))
+        #query.append(('fresh', str(time.time())))
         query = urllib.urlencode(query)
         return urlparse.urlunsplit((scheme, netloc, path, query, frag))
