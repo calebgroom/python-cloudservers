@@ -71,6 +71,11 @@ class CloudserversShell(object):
         self.parser.add_argument('--apikey',
             default = env('CLOUD_SERVERS_API_KEY'),
             help='Defaults to env[CLOUD_SERVERS_API_KEY].')
+
+        self.parser.add_argument('--nocache',
+            default = False,
+            action = 'store_true',
+            help = argparse.SUPPRESS)
         
         # Subcommands
         subparsers = self.parser.add_subparsers(metavar='<subcommand>')
@@ -113,7 +118,7 @@ class CloudserversShell(object):
         if args.debug:
             httplib2.debuglevel = 1
            
-        user, apikey = args.username, args.apikey
+        user, apikey, usecache = args.username, args.apikey, not args.nocache
         if not user:
             raise CommandError("You must provide a username, either via "
                                "--username or via env[CLOUD_SERVERS_USERNAME]")
@@ -121,14 +126,14 @@ class CloudserversShell(object):
             raise CommandError("You must provide an API key, either via "
                                "--apikey or via env[CLOUD_SERVERS_API_KEY]")
 
-        self.cs = self._api_class(user, apikey)
+        self.cs = self._api_class(user, apikey, usecache)
         try:
             self.cs.authenticate()
         except cloudservers.Unauthorized:
             raise CommandError("Invalid Cloud Servers credentials.")
         
         args.func(args)
-        
+
     @arg('command', metavar='<subcommand>', nargs='?', help='Display help for <subcommand>')
     def do_help(self, args):
         """

@@ -20,10 +20,11 @@ class CloudServersClient(httplib2.Http):
     AUTH_URL = 'https://auth.api.rackspacecloud.com/v1.0'
     USER_AGENT = 'python-cloudservers/%s' % cloudservers.__version__
     
-    def __init__(self, user, apikey):
+    def __init__(self, user, apikey, usecache):
         super(CloudServersClient, self).__init__()
         self.user = user
         self.apikey = apikey
+        self.usecache = usecache
         
         self.management_url = None
         self.auth_token = None
@@ -89,7 +90,8 @@ class CloudServersClient(httplib2.Http):
         
     def _munge_get_url(self, url):
         """
-        Munge GET URLs to always return uncached content.
+        Munge GET URLs to bypass the Cloud Servers API caching mechanism if
+        desired.
         
         The Cloud Servers API caches data *very* agressively and doesn't respect
         cache headers. To avoid stale data, then, we append a little bit of
@@ -98,6 +100,7 @@ class CloudServersClient(httplib2.Http):
         """
         scheme, netloc, path, query, frag = urlparse.urlsplit(url)
         query = urlparse.parse_qsl(query)
-        #query.append(('fresh', str(time.time())))
+        if not self.usecache:
+            query.append(('fresh', str(time.time())))
         query = urllib.urlencode(query)
         return urlparse.urlunsplit((scheme, netloc, path, query, frag))
